@@ -162,12 +162,8 @@ public class AccountDataAccessObject implements AccountDataAccessInterface {
     // Adds a new Account
     @Override
     public void saveAccount(Account account) {
-        if (!accountNumberToAccount.containsKey(account.getAccountNumber())) {
-            // TODO
-        } else {
-            this.accountNumberToAccount.put(account.getAccountNumber(), account);
-            this.saveAccountData();
-        }
+        this.accountNumberToAccount.put(account.getAccountNumber(), account);
+        this.saveAccountData();
     }
 
     @Override
