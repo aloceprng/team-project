@@ -142,7 +142,7 @@ public class AccountDataAccessObject implements AccountDataAccessInterface {
                 double transactionAmount = transaction.getTransactionAmount();
                 String transactionType = transaction.getTransactionType().toString();
                 String transactionCategory = transaction.getTransactionCategory().toString();
-                String transactionDate = transaction.getTransactionCategory().toString();
+                String transactionDate = transaction.getTransactionDate().toString();
 
                 JSONObject transactionObj = new JSONObject();
                 transactionObj.put("amount", transactionAmount);
