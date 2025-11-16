@@ -9,7 +9,5 @@ public class NetWorthTableInputData {
 
     public String getUserID() {
         return this.userID;
-    } //necessary?
+    }
 }
-
-//from user id, account numbers should be get
