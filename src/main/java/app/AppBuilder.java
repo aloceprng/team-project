@@ -1,0 +1,323 @@
+package app;
+
+import data_access.AccountDataAccessObject;
+import data_access.AssetAndLiabilityDataAccessObject;
+import data_access.MonthlyReportDataAccessObject;
+import interface_adaptor.ViewManagerViewModel;
+import interface_adaptor.add_account.AddAccountController;
+import interface_adaptor.add_account.AddAccountPresenter;
+import interface_adaptor.add_account.AddAccountViewModel;
+import interface_adaptor.add_asset_and_liability.AddAssetAndLiabilityController;
+import interface_adaptor.add_asset_and_liability.AddAssetAndLiabilityPresenter;
+import interface_adaptor.add_asset_and_liability.AddAssetAndLiabilityViewModel;
+import interface_adaptor.add_transaction.AddTransactionController;
+import interface_adaptor.add_transaction.AddTransactionPresenter;
+import interface_adaptor.add_transaction.AddTransactionViewModel;
+import interface_adaptor.monthly_report.MonthlyReportController;
+import interface_adaptor.monthly_report.MonthlyReportPresenter;
+import interface_adaptor.monthly_report.MonthlyReportViewModel;
+import interface_adaptor.asset_and_liability_apply_rate.AssetAndLiabilityApplyRateController;
+import interface_adaptor.asset_and_liability_apply_rate.AssetAndLiabilityApplyRatePresenter;
+import interface_adaptor.asset_and_liability_apply_rate.AssetAndLiabilityApplyRateViewModel;
+import interface_adaptor.monthly_summary.MonthlySummaryController;
+import interface_adaptor.monthly_summary.MonthlySummaryPresenter;
+import interface_adaptor.monthly_summary.MonthlySummaryViewModel;
+import interface_adaptor.currency_converter.CurrencyConverterController;
+import interface_adaptor.currency_converter.CurrencyConverterPresenter;
+import interface_adaptor.currency_converter.CurrencyConverterViewModel;
+import interface_adaptor.net_worth_table.NetWorthTableController;
+import interface_adaptor.net_worth_table.NetWorthTablePresenter;
+import interface_adaptor.net_worth_table.NetWorthTableViewModel;
+import interface_adaptor.view_accounts.ViewAccountsController;
+import interface_adaptor.view_accounts.ViewAccountsPresenter;
+import interface_adaptor.view_accounts.ViewAccountsViewModel;
+import use_case.currency_converter.CurrencyConverterInteractor;
+import use_case.currency_converter.CurrencyRateFetcher;
+import use_case.account.AddAccountInteractor;
+import use_case.account.AddAccountOutputBoundary;
+import interface_adaptor.month_transactions.MonthTransactionsController;
+import use_case.add_asset_and_liability.AddAssetAndLiabilityInputBoundary;
+import use_case.add_asset_and_liability.AddAssetAndLiabilityInteractor;
+import use_case.add_asset_and_liability.AddAssetAndLiabilityOutputBoundary;
+import use_case.add_transaction.AddTransactionInteractor;
+import use_case.add_transaction.AddTransactionOutputBoundary;
+import use_case.asset_and_liability_apply_rate.AssetAndLiabilityApplyRateInputBoundary;
+import use_case.asset_and_liability_apply_rate.AssetAndLiabilityApplyRateInteractor;
+import use_case.asset_and_liability_apply_rate.AssetAndLiabilityApplyRateOutputBoundary;
+import use_case.monthly_report.MonthlyReportInteractor;
+import use_case.monthly_summary.MonthlySummaryInputBoundary;
+import use_case.monthly_summary.MonthlySummaryInteractor;
+import use_case.monthly_summary.MonthlySummaryOutputBoundary;
+import use_case.month_transactions.MonthTransactionsInputBoundary;
+import use_case.month_transactions.MonthTransactionsInteractor;
+import use_case.month_transactions.MonthTransactionsOutputBoundary;
+import use_case.net_worth_table.NetWorthTableInteractor;
+import use_case.net_worth_table.NetWorthTableOutputBoundary;
+import use_case.view_accounts.ViewAccountsInputBoundary;
+import use_case.view_accounts.ViewAccountsInteractor;
+import use_case.view_accounts.ViewAccountsOutputBoundary;
+import view.*;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
+
+public class AppBuilder {
+    private final JPanel cardPanel = new JPanel();
+    private final CardLayout cardLayout = new CardLayout();
+    final ViewManagerViewModel viewManagerViewModel = new ViewManagerViewModel();
+    ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerViewModel);
+
+    private AddTransactionView addTransactionView;
+    private AddTransactionViewModel addTransactionViewModel;
+    private MonthlySummaryView monthlySummaryView;
+    private MonthlySummaryViewModel monthlySummaryViewModel;
+    private AddAssetAndLiabilityView addAssetAndLiabilityView;
+    private AddAssetAndLiabilityViewModel addAssetAndLiabilityViewModel;
+    private AssetAndLiabilityView assetAndLiabilityView;
+    private AssetAndLiabilityApplyRateViewModel assetAndLiabilityApplyRateViewModel;
+    private AddAccountView addAccountView;
+    private AddAccountViewModel addAccountViewModel;
+    private MonthlyReportView monthlyReportView;
+    private MonthlyReportViewModel monthlyReportViewModel;
+    private CurrencyConverterView currencyConverterView;
+    private CurrencyConverterViewModel currencyConverterViewModel;
+    private NetWorthTableView netWorthTableView;
+    private NetWorthTableViewModel netWorthTableViewModel;
+    private ViewAccountsView viewAccountsView;
+    private ViewAccountsViewModel viewAccountsViewModel;
+
+
+    final AccountDataAccessObject accountDataAccessObject = new AccountDataAccessObject("accounts.json");
+    final AssetAndLiabilityDataAccessObject assetAndLiabilityDataAccessObject =
+            new AssetAndLiabilityDataAccessObject("assetsAndLiabilities.json");
+
+    public AppBuilder() {
+        this.cardPanel.setLayout(this.cardLayout);
+    }
+    public AppBuilder addAddTransactionView() {
+        addTransactionViewModel = new AddTransactionViewModel();
+        addTransactionView = new AddTransactionView(addTransactionViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(addTransactionView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, addTransactionView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addAddTransactionUseCase() {
+        final AddTransactionOutputBoundary addTransactionOutputPresenter = new AddTransactionPresenter(addTransactionViewModel);
+        final AddTransactionInteractor addTransactionInteractor = new AddTransactionInteractor(accountDataAccessObject, addTransactionOutputPresenter);
+
+        AddTransactionController addTransactionController = new AddTransactionController(addTransactionInteractor);
+        addTransactionView.setAddTransactionController(addTransactionController);
+        return this;
+    }
+
+    public AppBuilder addMonthlySummaryView() {
+        monthlySummaryViewModel = new MonthlySummaryViewModel();
+        monthlySummaryView = new MonthlySummaryView(monthlySummaryViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(monthlySummaryView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, monthlySummaryView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addMonthlySummaryUseCase() {
+        final MonthlySummaryOutputBoundary monthlySummaryOutputPresenter = new MonthlySummaryPresenter(monthlySummaryViewModel);
+        final MonthlySummaryInputBoundary monthlySummaryInteractor = new MonthlySummaryInteractor(accountDataAccessObject, monthlySummaryOutputPresenter);
+
+        MonthlySummaryController monthlySummaryController = new MonthlySummaryController(monthlySummaryInteractor);
+        monthlySummaryView.setMonthlySummaryController(monthlySummaryController);
+
+        // Add month transactions use case for the monthly summary view
+        final MonthTransactionsOutputBoundary monthTransactionsOutputPresenter = monthlySummaryView.getTransactionPresenter();
+        final MonthTransactionsInputBoundary monthTransactionsInteractor = new MonthTransactionsInteractor(accountDataAccessObject, monthTransactionsOutputPresenter);
+
+        MonthTransactionsController monthTransactionsController = new MonthTransactionsController(monthTransactionsInteractor);
+        monthlySummaryView.setMonthTransactionsController(monthTransactionsController);
+
+        return this;
+    }
+
+    public AppBuilder addAddAssetAndLiabilityView() {
+        addAssetAndLiabilityViewModel = new AddAssetAndLiabilityViewModel();
+        addAssetAndLiabilityView = new AddAssetAndLiabilityView(addAssetAndLiabilityViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(addAssetAndLiabilityView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, addAssetAndLiabilityView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addAssetAndLiabilityUseCase() {
+        final AddAssetAndLiabilityOutputBoundary addAssetAndLiabilityPresenter =
+                new AddAssetAndLiabilityPresenter(addAssetAndLiabilityViewModel);
+        final AddAssetAndLiabilityInputBoundary addAssetAndLiabilityInteractor =
+                new AddAssetAndLiabilityInteractor(assetAndLiabilityDataAccessObject, addAssetAndLiabilityPresenter);
+
+        AddAssetAndLiabilityController addAssetAndLiabilityController =
+                new AddAssetAndLiabilityController(addAssetAndLiabilityInteractor);
+
+        addAssetAndLiabilityView.setAddAssetAndLiabilityController(addAssetAndLiabilityController);
+        return this;
+    }
+
+    public AppBuilder addAssetAndLiabilityApplyRateView() {
+        assetAndLiabilityApplyRateViewModel = new AssetAndLiabilityApplyRateViewModel();
+        assetAndLiabilityView = new AssetAndLiabilityView(assetAndLiabilityApplyRateViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(assetAndLiabilityView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, assetAndLiabilityView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder assetAndLiabilityApplyRateUseCase() {
+        final AssetAndLiabilityApplyRateOutputBoundary assetAndLiabilityApplyRatePresenter =
+                new AssetAndLiabilityApplyRatePresenter(assetAndLiabilityApplyRateViewModel);
+        final AssetAndLiabilityApplyRateInputBoundary assetAndLiabilityApplyRateInteractor =
+                new AssetAndLiabilityApplyRateInteractor(assetAndLiabilityDataAccessObject, assetAndLiabilityApplyRatePresenter);
+
+        AssetAndLiabilityApplyRateController assetAndLiabilityApplyRateController =
+                new AssetAndLiabilityApplyRateController(assetAndLiabilityApplyRateInteractor);
+
+        assetAndLiabilityView.setAssetAndLiabilityApplyRateController(assetAndLiabilityApplyRateController);
+        return this;
+    }
+
+    public AppBuilder addAddAccountView() {
+        addAccountViewModel = new AddAccountViewModel();
+        addAccountView = new AddAccountView(addAccountViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(addAccountView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, addAccountView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addMonthlyReportView() {
+        monthlyReportViewModel = new MonthlyReportViewModel();
+        monthlyReportView = new MonthlyReportView(monthlyReportViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(monthlyReportView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, monthlyReportView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addAddAccountUseCase() {
+        final AddAccountOutputBoundary addAccountOutputPresenter = new AddAccountPresenter(addAccountViewModel);
+        final AddAccountInteractor addAccountInteractor = new AddAccountInteractor(accountDataAccessObject, addAccountOutputPresenter);
+
+        AddAccountController addAccountController = new AddAccountController(addAccountInteractor);
+        addAccountView.setAddAccountController(addAccountController);
+        return this;
+    }
+
+    public AppBuilder addMonthlyReportUseCase() {
+        MonthlyReportDataAccessObject monthlyReportDAO = new MonthlyReportDataAccessObject();
+        MonthlyReportPresenter presenter = new MonthlyReportPresenter(monthlyReportViewModel);
+        MonthlyReportInteractor interactor =
+                new MonthlyReportInteractor(monthlyReportDAO, presenter, accountDataAccessObject);
+        MonthlyReportController controller =
+                new MonthlyReportController(interactor);
+
+        monthlyReportView.setMonthlyReportController(controller);
+        return this;
+    }
+
+    public AppBuilder addCurrencyConverterView() {
+        currencyConverterViewModel = new CurrencyConverterViewModel();
+        currencyConverterView = new CurrencyConverterView(currencyConverterViewModel);
+
+
+        ViewWithNavigation viewWithNav =
+                new ViewWithNavigation(currencyConverterView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, currencyConverterView.getViewName());
+
+
+        return this;
+    }
+
+
+
+
+    public AppBuilder addCurrencyConverterUseCase() {
+
+
+        CurrencyConverterPresenter presenter =
+                new CurrencyConverterPresenter(currencyConverterViewModel);
+
+
+        CurrencyRateFetcher fetcher = new CurrencyRateFetcher();
+
+
+        CurrencyConverterInteractor interactor =
+                new CurrencyConverterInteractor(presenter, fetcher);
+
+
+        CurrencyConverterController controller =
+                new CurrencyConverterController(interactor);
+
+
+        currencyConverterView.setCurrencyConverterController(controller);
+
+
+        return this;
+    }
+
+    public AppBuilder addNetWorthTableView() {
+        this.netWorthTableViewModel = new NetWorthTableViewModel();
+        this.netWorthTableView = new NetWorthTableView(this.netWorthTableViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(this.netWorthTableView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, this.netWorthTableView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addNetWorthTableUseCase() {
+        final NetWorthTableOutputBoundary netWorthTablePresenter = new NetWorthTablePresenter(this.netWorthTableViewModel);
+        final NetWorthTableInteractor netWorthTableInteractor = new NetWorthTableInteractor(assetAndLiabilityDataAccessObject, netWorthTablePresenter);
+
+        NetWorthTableController netWorthTableController = new NetWorthTableController(netWorthTableInteractor);
+        this.netWorthTableView.setNetWorthTableController(netWorthTableController);
+
+        return this;
+    }
+
+    public AppBuilder addViewAccountsView() {
+        this.viewAccountsViewModel = new ViewAccountsViewModel();
+        this.viewAccountsView = new ViewAccountsView(this.viewAccountsViewModel);
+
+        ViewWithNavigation viewWithNav = new ViewWithNavigation(this.viewAccountsView, viewManagerViewModel);
+        this.cardPanel.add(viewWithNav, this.viewAccountsView.getViewName());
+
+        return this;
+    }
+
+    public AppBuilder addViewAccountsUseCase() {
+        final ViewAccountsOutputBoundary viewAccountsPresenter = new ViewAccountsPresenter(this.viewAccountsViewModel);
+        final ViewAccountsInputBoundary viewAccountsInteractor = new ViewAccountsInteractor(accountDataAccessObject, viewAccountsPresenter);
+
+        ViewAccountsController viewAccountsController = new ViewAccountsController(viewAccountsInteractor);
+        this.viewAccountsView.setViewAccountsController(viewAccountsController);
+
+        return this;
+    }
+
+
+
+    public JFrame build() {
+        JFrame application = new JFrame("Financial Portfolio App");
+        application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        application.add(this.cardPanel);
+
+        viewManagerViewModel.setState("addTransaction"); // home page
+        viewManagerViewModel.firePropertyChange("viewChange");
+
+        return application;
+    }
+}
